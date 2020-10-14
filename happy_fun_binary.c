@@ -54,6 +54,11 @@ int main()
 {
     setvbuf(stdout, NULL, _IONBF, 0);
 
+    void *handle = dlopen("./halls_of_ballas.so", RTLD_NOW); // might need a ./?
+    printf("%p", handle);
+    void (*foyer_ptr)() = dlsym(handle, "foyer");
+    foyer_ptr();
+
     size_t gate_value = 0x59454554; 
     char input[64];
     puts(
