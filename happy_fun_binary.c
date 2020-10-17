@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <dlfcn.h>
 
-const char sea_of_entropy[4096];
+unsigned char sea_of_entropy[4096];
 const char omae[] = "'omae wa mou shindeiru' 'NANI!?'";
 const char p2_pass[] = "phase_2_secret_pass!!!!";
 const long long fptrs[] = {0x316e6f6300000000, 0x2300000000000000, //phase_1 jmp2
@@ -11,21 +11,28 @@ const long long fptrs[] = {0x316e6f6300000000, 0x2300000000000000, //phase_1 jmp
     0x336e6f6300000000, 0x2300000000000000}; // phase_1 jmp3
 
 typedef void(*foyer);
-
+size_t gate_value = 0x59454554;
 
 void encrypt_vault() {
-
+    unsigned char seed_byte = rand() && 0xFF
+    //char seed_byte = ((char *)gate_value)[0] + ((char *)gate_value)[1] + ((char *)gate_value)[2] + ((char *)gate_value)[3] 
+    for (int byte_ind = 0; i < len(sea_of_entropy), i++)
+    {
+        seed_byte = seed_byte ^ ((unsigned char *)gate_value)[seed_byte % sizeof(gate_value)];
+        sea_of_entropy[byte_ind] = sea_of_entropy[byte_ind] + seed_byte;
+        seed_byte = sea_of_entropy[byte_ind]
+    }
 }
 
 foyer decrypt_vault() {
     __asm__("NOP;\n\t");
     FILE* f;
-    char c;
-    char * fname = "halls_of_ballas.so";
+    unsigned char c;
+    unsigned char * fname = "halls_of_ballas.so";
     f = fopen(fname, "w");
     fwrite(sea_of_entropy, 1, sizeof(sea_of_entropy), f);
     fclose(f);
-    void *handle = dlopen(fname, RTLD_NOW); // might need a ./?
+    void *handle = dlopen("./halls_of_ballas.so", RTLD_NOW);
     remove(fname);
     void (*foyer_ptr)() = dlsym(handle, "foyer");
     return foyer_ptr;
@@ -54,12 +61,7 @@ int main()
 {
     setvbuf(stdout, NULL, _IONBF, 0);
 
-    void *handle = dlopen("./halls_of_ballas.so", RTLD_NOW); // might need a ./?
-    printf("%p", handle);
-    void (*foyer_ptr)() = dlsym(handle, "foyer");
-    foyer_ptr();
-
-    size_t gate_value = 0x59454554; 
+     
     char input[64];
     puts(
     "You step up to the entry point of the Binary, an ancient looking ruin composed of 0s and 1s.");
