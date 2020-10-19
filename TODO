@@ -1,0 +1,7 @@
+- write to on disk binary if debugging behavior is ever observed
+- test if separate threads will still run in gdb while main thread is stopped
+- check for debug breakpoints
+- selectively strip/mess with symbols?
+- seed rand in prologue, remove IV as a param in favor of rand() in encrypt
+- add a constructor to binary of ballas
+- square the prologue key to get more usable bytes
