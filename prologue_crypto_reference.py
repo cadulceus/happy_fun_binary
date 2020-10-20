@@ -1,4 +1,5 @@
 from random import randint
+from pwn import p32
 
 def encrypt(plaintext, IV, key):
     current_block = IV
@@ -20,8 +21,8 @@ def decrypt(ciphertext, IV, key):
         current_block = ciphertext[byte_ind]
     print [chr(byte) for byte in plaintext]
 
-key = [0xee, 0x05, 0x00, 0x00]
+key_arr = [ord(c) for c in p32(0x57a)]
 iv = 0x67
-ciphertext = encrypt([ord(char) for char in "yeetyeet\x00"], iv, key)
+ciphertext = encrypt([ord(char) for char in "\x7fELF"], iv, key_arr)
 for b in ciphertext: print hex(b)[2:],
-decrypt(ciphertext, iv, key)
+decrypt(ciphertext, iv, key_arr)

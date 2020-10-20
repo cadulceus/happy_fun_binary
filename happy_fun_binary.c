@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <dlfcn.h>
 
-unsigned char sea_of_entropy[] = "yeetyeet";
+// must be initialized to something or it goes to .bss instead of .data
+unsigned char sea_of_entropy[BOB_SZ] = "yeeeeeeet";
 
 typedef void(*foyer);
 size_t gate_offset = 0x59454554;
@@ -13,8 +14,6 @@ void encrypt(char *plaintext, size_t plaintext_len, char IV, unsigned char *key)
     unsigned char current_block = IV;
     for (int byte_ind = 0; byte_ind < plaintext_len; byte_ind++)
     {
-        printf("Using %2x as key byte, index %i\n",
-               ((unsigned char *)key)[current_block % sizeof(size_t)], current_block % sizeof(size_t));
         current_block = current_block ^ key[current_block % sizeof(size_t)];
         plaintext[byte_ind] = (plaintext[byte_ind] + (current_block * current_block));
         current_block = plaintext[byte_ind];
@@ -27,8 +26,6 @@ void decrypt(char *ciphertext, size_t plaintext_len, char IV, unsigned char *key
     unsigned char unmodified_ciphertext;
     for (int byte_ind = 0; byte_ind < plaintext_len; byte_ind++)
     {
-        printf("Using %2x as key byte, index %i\n",
-               ((unsigned char *)key)[current_block % sizeof(size_t)], current_block % sizeof(size_t));
         unmodified_ciphertext = ciphertext[byte_ind];
         current_block = current_block ^ key[current_block % sizeof(size_t)];
         ciphertext[byte_ind] = ciphertext[byte_ind] - (current_block * current_block);
@@ -70,7 +67,7 @@ void vault()
         fgets(input, 64, stdin);
         if (!strcmp(input, "use the lower function\n"))
         {
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 32; i++)
             {
                 printf("%2x", sea_of_entropy[i]);
             }
@@ -78,7 +75,7 @@ void vault()
             encrypt(sea_of_entropy, sizeof(sea_of_entropy), IV, (unsigned char *)&gate_offset);
             puts("You run the lower function, and watch as the sea of bytes folds and turns upon itself"
                  " Before long it looks nothing like it did milliseconds ago.\n");
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 32; i++)
             {
                 printf("%2x", sea_of_entropy[i]);
             }

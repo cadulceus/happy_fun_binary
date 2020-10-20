@@ -17,5 +17,4 @@ print r.recvuntil("Probably?\n")
 print hex(vault_loc & 0x0FFF)[2:]
 r.sendline("step through the gate")
 print r.recvuntil("its twin...\n")
-r.sendline("use the lower function")
 r.interactive()
