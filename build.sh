@@ -1,4 +1,4 @@
-gcc -c -Wall -fpic -Wl,-E -m32 binary_of_ballas.c
+gcc -c -Wall -fpic -ggdb -Wl,-E -m32 binary_of_ballas.c
 gcc -shared -m32 -o binary_of_ballas.so binary_of_ballas.o
 export BOB_SZ=$(wc -c < binary_of_ballas.so)
 export SEA_OF_YEET=$(python -c "print 'e'*$BOB_SZ")

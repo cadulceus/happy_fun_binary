@@ -1,4 +1,5 @@
 from collections import Counter
+from decimal import *
 def encode(lower, upper, string, ratios):
     total_range = upper - lower
     current_mapping = {}
@@ -19,23 +20,25 @@ def decode(lower, upper, encoded, ratios):
         current_mapping[char] = pointer
         pointer = pointer + ratios[char] * total_range
         if current_mapping[char] > encoded:
-            print previous
             if previous == '}':
                 return previous
             else:
                 return previous + decode(current_mapping[previous], current_mapping[char], encoded, ratios)  
         previous = char
-    print previous
     return previous + decode(current_mapping[previous], upper, encoded, ratios)
 
 def calculate_ratios(string):
     ratios = Counter([char for char in string])
-    total = float(sum(ratios.values()))
+    total = Decimal(sum(ratios.values()))
     for char in ratios:
         ratios[char] = ratios[char] / total
     return ratios
 
-flag = "beep_beep_lettuce}"#"banana_pear_bookkeeper_naboo}"
+flag = "beep_beeep_bbbeeep_beeeeppppp_bep_bep}"
 ratios = calculate_ratios(flag)
-encoded_flag = encode(0, 1, flag, ratios)
-print decode(0, 1, 0.0883384247611459, ratios)
+encoded_flag_range = encode(0, 1, flag, ratios)
+encoded_flag = encoded_flag_range[0] + ((encoded_flag_range[1] - encoded_flag_range[0]) / 2)
+print decode(0, 1, encoded_flag, ratios), encoded_flag
+
+for key in ratios:
+    print "{.c = %s, .ratio = %ff}, //%s" % (hex(ord(key)), ratios[key], key)

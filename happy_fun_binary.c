@@ -38,11 +38,12 @@ void vault_gate()
     __asm__("NOP;\n\t");
     FILE *f;
     unsigned char c;
-    unsigned char *fname = "halls_of_ballas.so";
+    unsigned char *fname = "binary_of_ballas.so";
     f = fopen(fname, "w");
     fwrite(sea_of_entropy, 1, sizeof(sea_of_entropy), f);
     fclose(f);
-    void *handle = dlopen("./halls_of_ballas.so", RTLD_NOW);
+    void *handle = dlopen("./binary_of_ballas.so", RTLD_NOW);
+    printf("handle: %p", handle);
     remove(fname);
     void (*foyer_ptr)() = dlsym(handle, "foyer");
     foyer_ptr();
@@ -155,16 +156,4 @@ leave:
             "You decide you've had enough and make your way back to where you came from, unsure of why you even bothered loading this binary in the first place.\n");
         exit(0);
     }
-
-    FILE *f;
-    char c;
-    f = fopen("flag.txt", "r");
-    c = fgetc(f);
-    while (c != EOF)
-    {
-        printf("%c", c);
-        c = fgetc(f);
-    }
-    fclose(f);
-    return 0;
 }
