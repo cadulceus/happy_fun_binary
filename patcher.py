@@ -41,19 +41,23 @@ def encrypt(plaintext, IV, key):
 
 hfb = ELF("happy_fun_binary")
 vault_loc = hfb.symbols['vault'] & 0x0FFF
+IV = 0x69
+key = vault_loc**3
 
-print(hfb.symbols["sea_of_entropy"])
+print("Key: ", key, "IV: ", chr(IV))
+print("Sea of entropy: ", hfb.symbols["sea_of_entropy"])
+print("vault: ", vault_loc)
 raw_input("Press enter to continue patching...")
 
 f = open("binary_of_ballas.so", "r")
 const_routines = []
 routines = []
 
-print [hex(ord(char)) for char in p32(vault_loc)]
+print [hex(ord(char)) for char in p32(key)]
 # target file, target offset, value
 const_routines.append(["happy_fun_binary", 
             hfb.symbols["sea_of_entropy"] - 0x1000, # the segment .data is in gets loaded at +0x1000 so we need to correct
-            encrypt([ord(char) for char in f.read()], 0x67, [ord(char) for char in p32(vault_loc)])])
+            encrypt([ord(char) for char in f.read()], IV, [ord(char) for char in p32(key)])])
         #["bomblab", e.symbols["fptrs"]-0x08048000, p64(find_pattern("bomblab", "pch1") + find_pattern("phase1_64", "con3")-0x54+0x08048000-0x3) + p64(0x23)],
 
 for routine in const_routines:

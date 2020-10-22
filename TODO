@@ -5,3 +5,4 @@
 - seed rand in prologue, remove IV as a param in favor of rand() in encrypt
 - add a constructor to binary of ballas
 - square the prologue key to get more usable bytes
+- code after return for obfuscation?

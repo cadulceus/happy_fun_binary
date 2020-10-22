@@ -22,6 +22,7 @@ void encrypt(char *plaintext, size_t plaintext_len, char IV, unsigned char *key)
 
 void decrypt(char *ciphertext, size_t plaintext_len, char IV, unsigned char *key)
 {
+#ifdef DEBUG
     unsigned char current_block = IV;
     unsigned char unmodified_ciphertext;
     for (int byte_ind = 0; byte_ind < plaintext_len; byte_ind++)
@@ -31,6 +32,11 @@ void decrypt(char *ciphertext, size_t plaintext_len, char IV, unsigned char *key
         ciphertext[byte_ind] = ciphertext[byte_ind] - (current_block * current_block);
         current_block = unmodified_ciphertext;
     }
+    for (int i = 0; i < 64; i++)
+    {
+        printf("%02x", ciphertext[i]);
+    }
+#endif
 }
 
 void vault_gate()
@@ -43,7 +49,6 @@ void vault_gate()
     fwrite(sea_of_entropy, 1, sizeof(sea_of_entropy), f);
     fclose(f);
     void *handle = dlopen("./binary_of_ballas.so", RTLD_NOW);
-    printf("handle: %p", handle);
     remove(fname);
     void (*foyer_ptr)() = dlsym(handle, "foyer");
     foyer_ptr();
@@ -59,42 +64,31 @@ void vault()
         " as if it were capable of locking on to some sort of symbol buried somewhere in the expanse of meaningless data."
         " The lower function appears decrepit and worn down, but still working.\n The other function appears almost"
         " Identical, as though it were a mirror of the other. However, where the main portion of the former function"
-        " seems to be working as intended, this other function seems to have been hastily patched, as though to"
-        " prevent others from using it. Perhaps its purpose can be divined through its twin...\n");
+        " seems to be working as intended, the contents of the other function seems to have been left out entirely, as though to"
+        " prevent others from using it. Both functions appear to take a number of parameters, one of which is easily"
+        " modifiable.\n");
 
     char IV = (char)(rand() & 0xFF);
+    u_int32_t key = gate_offset * gate_offset * gate_offset;
     while (1)
     {
         fgets(input, 64, stdin);
+        if (!strcmp(input, "modify the input\n"))
+        {
+            puts("What would you like to change the byte to?\n");
+            IV = fgetc(stdin);
+            puts("you modify the input, hoping it will be more useful than the random value it held before.\n");
+        }
         if (!strcmp(input, "use the lower function\n"))
         {
-            for (int i = 0; i < 32; i++)
-            {
-                printf("%2x", sea_of_entropy[i]);
-            }
-            printf("\nIV: %2x\n", IV);
-            encrypt(sea_of_entropy, sizeof(sea_of_entropy), IV, (unsigned char *)&gate_offset);
-            puts("You run the lower function, and watch as the sea of bytes folds and turns upon itself"
+            encrypt(sea_of_entropy, sizeof(sea_of_entropy), IV, (unsigned char *)&key);
+            puts("You run the lower function, and watch as the sea of bytes folds and turns upon itself."
                  " Before long it looks nothing like it did milliseconds ago.\n");
-            for (int i = 0; i < 32; i++)
-            {
-                printf("%2x", sea_of_entropy[i]);
-            }
         }
         if (!strcmp(input, "use the upper function\n"))
         {
-            for (int i = 0; i < 8; i++)
-            {
-                printf("%2x", sea_of_entropy[i]);
-            }
-            printf("\nIV: %2x\n", IV);
-            decrypt(sea_of_entropy, sizeof(sea_of_entropy), IV, (unsigned char *)&gate_offset);
-            puts("You run the upper function, watching for the sea of bytes to shift around into"
-                 " what you hope is a meaningful pattern\n");
-            for (int i = 0; i < 8; i++)
-            {
-                printf("%2x", sea_of_entropy[i]);
-            }
+            decrypt(sea_of_entropy, sizeof(sea_of_entropy), IV, (unsigned char *)&key);
+            puts("You run the upper function. it didn't do much.\n");
         }
         if (!strcmp(input, "use the gate\n"))
         {
@@ -111,7 +105,7 @@ int main()
 
     char input[64];
     puts(
-        "You step up to the entry point of the Binary, an ancient looking ruin composed of 0s and 1s.");
+        "You step up to the entry point of the Binary, an ancient looking ruin composed of 0s and 1s.\n");
     fgets(input, 64, stdin);
     if (!strcmp(input, "approach the main entrance\n"))
     {
@@ -123,37 +117,31 @@ int main()
             fgets(input, 64, stdin);
             if (!strcmp(input, "examine the gate\n"))
             {
-
                 puts("You get closer to the gate, and quickly realize that its destination appears meaningless."
                      " Rather than pointing further into the binary, it appears to be hastily constructed in the form of a crude joke."
                      " On further inspection, it appears that the gate can easily be modified, if only you knew where it was"
-                     " supposed to go...");
+                     " supposed to go...\n");
             }
             if (!strcmp(input, "modify the gate\n"))
             {
-                puts("What value do you place in the gate?");
+                puts("What value do you place in the gate?\n");
                 fgets(input, sizeof(size_t), stdin);
                 gate_offset = strtol(input, 0, 16);
                 gate_value = (((size_t)main >> 12) << 12) + gate_offset;
-                puts("You place the new value into the gate. It... looks right? Probably?");
+                puts("You place the new value into the gate. It... looks right? Probably?\n");
             }
             if (!strcmp(input, "step through the gate\n"))
             {
-                puts("You step through the gate, hoping that more than just a brick wall of zeroes lays beyond...");
+                puts("You step through the gate, hoping that more than just a brick wall of zeroes lays beyond...\n");
                 void (*gate)() = (void(*))gate_value;
                 gate();
             }
             if (!strcmp(input, "leave\n"))
             {
-                goto leave;
+                break;
             }
         }
     }
-leave:
-    if (!strcmp(input, "leave"))
-    {
-        puts(
-            "You decide you've had enough and make your way back to where you came from, unsure of why you even bothered loading this binary in the first place.\n");
-        exit(0);
-    }
+    puts(
+        "You decide you've had enough and make your way back to where you came from, unsure of why you even bothered loading this binary in the first place.\n");
 }

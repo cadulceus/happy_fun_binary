@@ -16,11 +16,11 @@ struct symbol_ratio
 };
 
 struct symbol_ratio ratios[] = {
-{.c = 0x70, .ratio = 0.263158f}, //p
-{.c = 0x62, .ratio = 0.210526f}, //b
-{.c = 0x65, .ratio = 0.368421f}, //e
-{.c = 0x7d, .ratio = 0.026316f}, //}
-{.c = 0x5f, .ratio = 0.131579f}, //_
+    {.c = 0x70, .ratio = 0.263158f}, //p
+    {.c = 0x62, .ratio = 0.210526f}, //b
+    {.c = 0x65, .ratio = 0.368421f}, //e
+    {.c = 0x7d, .ratio = 0.026316f}, //}
+    {.c = 0x5f, .ratio = 0.131579f}, //_
 };
 
 struct symbol_range *find_range_for_char(char c, struct symbol_range *range_array, size_t array_len)
@@ -75,6 +75,7 @@ long double encode(long double lower, long double upper, char *string, struct sy
     return encode(char_range->lower, char_range->upper, string + 1, current_mapping, mapping_len);
 }
 
+#ifdef DEBUG
 void decode(long double lower, long double upper, long double encoded_float, char *decoded_buf, struct symbol_range *current_mapping, size_t mapping_len)
 {
     long double total_range = upper - lower;
@@ -97,36 +98,126 @@ void decode(long double lower, long double upper, long double encoded_float, cha
     }
     return;
 }
+#endif
 
 void chal_1()
 {
     struct symbol_range mapping[(sizeof(ratios) / sizeof(struct symbol_ratio))];
 
     long double pointer = 0;
+    char input[64];
     for (int i = 0; i < sizeof(mapping) / sizeof(struct symbol_range); i++)
     {
         mapping[i].c = ratios[i].c;
         mapping[i].lower = pointer;
         pointer = pointer + ratios[i].ratio;
         mapping[i].upper = pointer;
-        // printf("%c lower: %Lf upper: %Lf\n", mapping[i].c, mapping[i].lower, mapping[i].upper);
     }
+    union
+    {
+        long double d;
+        char c[sizeof(long double)];
+    } flag_float = {.c = "\xb3\x35\xdf\xb8\x80\xf5\x28\xd0\xfd\x3f\x00\x00"};
 
-    // double flag = 0.4065626736106059008675764359;
-    char flag_str[64] = "flag{";
-    long double flag_float = encode(0, 1, "beep_beeep_bbbeeep_beeeeppppp}", mapping, (sizeof(ratios) / sizeof(struct symbol_ratio)));
-    for (int i = 0; i < sizeof(long double); i++) {
-        printf("%02x", ((unsigned char *) &flag_float)[i]);
+    char flag_str[64] = "flag{beep_this_is_not_the_flag}";
+
+    printf("You enter the leftmost doorway and emerge in a square shaped room."
+         " Across the walls you see a number of structures inscribed into the binary,"
+         " and at the room's center lies a capsule atop a pedestal. To the left of the pedestal"
+         " is a function that appears to feed directly into the pedestal. Below the function"
+         " is an input string that appears to feed into it. The input string currently contains \"%s\".",
+         flag_str);
+
+    while (1)
+    {
+        fgets(input, 64, stdin);
+        if (!strcmp(input, "examine the capsule\n"))
+        {
+            printf("Floating in the center of the capsule is a number that after a "
+                   " moment of examination seems to approximate %Lf",
+                   flag_float.d);
+        }
+
+        if (!strcmp(input, "modify the flag\n"))
+        {
+            puts("What would you like to change the flag to?");
+            fgets(input, 64, stdin);
+            strcpy(flag_str, input);
+            puts("You change the input flag, hoping to gain more insight into the function's"
+            " behavior the next time you run it.");
+        }
+
+        if (!strcmp(input, "execute the function\n"))
+        {
+            puts(flag_str + 5);
+            flag_float.d = encode(0, 1, flag_str + 5,
+                                  mapping, (sizeof(ratios) / sizeof(struct symbol_ratio)));
+            printf("As you call the function, you see the structures written across the wall light up"
+                   " as they are read into the function, along with the flag value and some odd constants."
+                   " In a few milliseconds, the function completes, and the value within the capsule changes to"
+                   " match the output, %Lf", flag_float.d);
+        }
+
+        if (!strcmp(input, "go back\n"))
+        {
+            printf("You decide you've done all you can here, and return to foyer.");
+            return;
+        }
+
+        // currently encoded flag: beep_beeep_bbbeeep_beeeeppppp}
+#ifdef DEBUG
+        char decoded_flag[64] = "flag{";
+        if (!strcmp(input, "decode flag\n"))
+        {
+        for (int i = 0; i < sizeof(long double); i++)
+        {
+            printf("%02x", ((unsigned char *)&flag_float.d)[i]);
+        }
+        printf("\n%Lf\n", flag_float.d);
+        decode(0, 1, flag_float.d, decoded_flag, mapping, (sizeof(ratios) / sizeof(struct symbol_ratio)));
+        puts(decoded_flag);
+        }
+#endif
     }
-    printf("\n\n%li", (long) flag_float);
-    char *arr = "\xb3\x35\xdf\xb8\x80\xf5\x28\xd0\xfd\x3f\x00\x00";
-    printf("\nlol %.17Lg", (long double) *arr);
-    decode(0, 1, flag_float, flag_str, mapping, (sizeof(ratios) / sizeof(struct symbol_ratio)));
-    puts(flag_str);
 }
 
 void foyer()
 {
-    puts("yeet");
-    chal_1();
+    char *prologue_flag = "flag{yes_this_is_all_one_big_critical_role_reference}";
+    char input[64];
+    puts("You emerge into a grand and extravegant foyer. While sparsely furnished, intricately crafted code decorates every square"
+    " inch of the walls and ceiling. In the center of the room lies a grand structure, carved into which"
+    " are three slots. The three slots feed into a function that seems cryptographic in nature."
+    " On the far side of the room lies 3 semi-circular doorways leading into darkness.\n");
+
+    while (1) 
+    {
+        fgets(input, 64, stdin);
+        if (!strcmp(input, "examine the doormat\n"))
+        {
+            printf("You look down, and are surprised to see a welcome mat beneath your feet. On it reads"
+            " %s. That was easy!\n",
+                   prologue_flag);
+        }
+        
+        if (!strcmp(input, "examine the cryptographic function\n"))
+        {
+            puts("On closer inspection, you realize that its not yet implemented. oops!\n");
+        }
+        
+        if (!strcmp(input, "enter the first gate\n"))
+        {
+            chal_1();
+        }
+        
+        if (!strcmp(input, "enter the second gate\n"))
+        {
+            puts("You quickly realize that it leads nowhere because the challenge isn't implemented yet :(\n");
+        }
+        
+        if (!strcmp(input, "enter the second gate\n"))
+        {
+            puts("You quickly realize that it leads nowhere because the challenge isn't implemented yet :(\n");
+        }
+    }
 }
