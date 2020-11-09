@@ -99,6 +99,27 @@ void vault()
     }
 }
 
+void checker_2(char *byte)
+{
+}
+
+int dummy_val = 1337;
+void inline change_32_to_64()
+{
+    if (dummy_val != 1337)
+    {
+        dummy_val = 31337;
+        return;
+    }
+    __asm__("jmp 0x33:0x31706d6a\n\t");
+}
+
+
+void inline change_64_to_32()
+{
+    __asm__("jmp 0x33:0x31706d6a\n\t");
+}
+
 int main()
 {
     setvbuf(stdout, NULL, _IONBF, 0);

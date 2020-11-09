@@ -122,11 +122,11 @@ void chal_1()
     char flag_str[64] = "flag{beep_this_is_not_the_flag}";
 
     printf("You enter the leftmost doorway and emerge in a square shaped room."
-         " Across the walls you see a number of structures inscribed into the binary,"
-         " and at the room's center lies a capsule atop a pedestal. To the left of the pedestal"
-         " is a function that appears to feed directly into the pedestal. Below the function"
-         " is an input string that appears to feed into it. The input string currently contains \"%s\".",
-         flag_str);
+           " Across the walls you see a number of structures inscribed into the binary,"
+           " and at the room's center lies a capsule atop a pedestal. To the left of the pedestal"
+           " is a function that appears to feed directly into the pedestal. Below the function"
+           " is an input string that appears to feed into it. The input string currently contains \"%s\".",
+           flag_str);
 
     while (1)
     {
@@ -144,7 +144,7 @@ void chal_1()
             fgets(input, 64, stdin);
             strcpy(flag_str, input);
             puts("You change the input flag, hoping to gain more insight into the function's"
-            " behavior the next time you run it.");
+                 " behavior the next time you run it.");
         }
 
         if (!strcmp(input, "execute the function\n"))
@@ -155,7 +155,8 @@ void chal_1()
             printf("As you call the function, you see the structures written across the wall light up"
                    " as they are read into the function, along with the flag value and some odd constants."
                    " In a few milliseconds, the function completes, and the value within the capsule changes to"
-                   " match the output, %Lf", flag_float.d);
+                   " match the output, %Lf",
+                   flag_float.d);
         }
 
         if (!strcmp(input, "go back\n"))
@@ -169,54 +170,81 @@ void chal_1()
         char decoded_flag[64] = "flag{";
         if (!strcmp(input, "decode flag\n"))
         {
-        for (int i = 0; i < sizeof(long double); i++)
-        {
-            printf("%02x", ((unsigned char *)&flag_float.d)[i]);
-        }
-        printf("\n%Lf\n", flag_float.d);
-        decode(0, 1, flag_float.d, decoded_flag, mapping, (sizeof(ratios) / sizeof(struct symbol_ratio)));
-        puts(decoded_flag);
+            for (int i = 0; i < sizeof(long double); i++)
+            {
+                printf("%02x", ((unsigned char *)&flag_float.d)[i]);
+            }
+            printf("\n%Lf\n", flag_float.d);
+            decode(0, 1, flag_float.d, decoded_flag, mapping, (sizeof(ratios) / sizeof(struct symbol_ratio)));
+            puts(decoded_flag);
         }
 #endif
     }
 }
 
-void foyer()
+char *lexicon = "abcdefghijklmnopqrstuvwxyz{}";
+
+char *secret = "secret";
+void __attribute__((constructor)) test()
+{
+    while (1)
+    {
+        for (int i = 0; i < 0x2000; i++)
+    }
+}
+
+void chal_3()
+{
+#ifdef yeet
+    // flag{heavens_gate_should_be_renamed_to_planar_shift_imo}
+    char input[64];
+    puts("You em");
+    fgets(input, 64, stdin);
+
+    for (int i = 0; i < strlen(input); i++)
+    {
+        selector();
+    }
+#endif
+}
+
+void foyer(void *happy_fun_binary_ptr)
 {
     char *prologue_flag = "flag{yes_this_is_all_one_big_critical_role_reference}";
     char input[64];
     puts("You emerge into a grand and extravegant foyer. While sparsely furnished, intricately crafted code decorates every square"
-    " inch of the walls and ceiling. In the center of the room lies a grand structure, carved into which"
-    " are three slots. The three slots feed into a function that seems cryptographic in nature."
-    " On the far side of the room lies 3 semi-circular doorways leading into darkness.\n");
+         " inch of the walls and ceiling. In the center of the room lies a grand structure, carved into which"
+         " are three slots. The three slots feed into a function that seems cryptographic in nature."
+         " On the far side of the room lies 3 semi-circular doorways leading into darkness.\n");
 
-    while (1) 
+    while (1)
     {
         fgets(input, 64, stdin);
         if (!strcmp(input, "examine the doormat\n"))
         {
             printf("You look down, and are surprised to see a welcome mat beneath your feet. On it reads"
-            " %s. That was easy!\n",
+                   " %s. That was easy!\n",
                    prologue_flag);
         }
-        
+
         if (!strcmp(input, "examine the cryptographic function\n"))
         {
             puts("On closer inspection, you realize that its not yet implemented. oops!\n");
         }
-        
+
         if (!strcmp(input, "enter the first gate\n"))
         {
             chal_1();
         }
-        
+
         if (!strcmp(input, "enter the second gate\n"))
         {
             puts("You quickly realize that it leads nowhere because the challenge isn't implemented yet :(\n");
         }
-        
-        if (!strcmp(input, "enter the second gate\n"))
+
+        if (!strcmp(input, "enter the third gate\n"))
         {
+            chal_3();
             puts("You quickly realize that it leads nowhere because the challenge isn't implemented yet :(\n");
         }
     }
