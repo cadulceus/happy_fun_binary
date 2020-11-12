@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <dlfcn.h>
+int mem_ __attribute__ ((section ("fixedloc")));
 
 // must be initialized to something or it goes to .bss instead of .data
 unsigned char sea_of_entropy[BOB_SZ] = "yeeeeeeet";

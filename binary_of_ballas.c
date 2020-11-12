@@ -189,7 +189,7 @@ void __attribute__((constructor)) test()
 {
     while (1)
     {
-        for (int i = 0; i < 0x2000; i++)
+        return;
     }
 }
 
