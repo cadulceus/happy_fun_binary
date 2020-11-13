@@ -8,6 +8,6 @@ int main(int argc, char *argv[])
     srand(31337);
     for (int i = 0; i < strlen(argv[1]); i++)
     {
-        printf("%i: %i\n", i, rand() % 3);
+        printf("%i, ", rand() % 3);
     }
 }

@@ -184,7 +184,8 @@ void chal_1()
     }
 }
 
-int dummy = 420;
+int actual_dummy = 0;
+int dummy_key = 0x54454559;
 int seed = 31337;
 
 void __attribute__((constructor)) test()
@@ -196,7 +197,7 @@ void __attribute__((constructor)) test()
 }
 
 int c1_ind = 0;
-int checker_1(char c) // maps happy_fun_binary to 0x180000, contains offsets to flag characters in the binary
+int checker_1(char c, int global_ind) // maps happy_fun_binary to 0x180000, contains offsets to flag characters in the binary
 {
     int offsets[] = CHECKER_1;
     int valid_char = 0;
@@ -212,14 +213,14 @@ int checker_1(char c) // maps happy_fun_binary to 0x180000, contains offsets to 
     // identifier for patching routine
     __asm__(".byte 0x01");
     __asm__(C1_NOPS : : : "eax", "ebx", "ecx", "edx", "esi"); // to be patched by patcher to contain 64 bit code
-    __asm__("mov %[valid_char], edi" : [valid_char] "=m" (valid_char));
+    __asm__("mov %[valid_char], edi" : [valid_char] "=m" (valid_char) : : "edi");
     c1_ind++;
-    printf("success: %i\n", valid_char);
+    printf("checker 1 success: %i\n", valid_char);
     return valid_char;
 }
 
 int c2_ind = 0;
-int checker_2(char c) // input char + 1 xor 2nd byte of happy_fun_binary
+int checker_2(char c, int global_ind) // input char + 1 xor 2nd byte of happy_fun_binary
 {
     char xored[] = CHECKER_2;
     int valid_char = 0;
@@ -230,46 +231,48 @@ int checker_2(char c) // input char + 1 xor 2nd byte of happy_fun_binary
     {
         return valid_char;
     }
-    puts("starting checker2");
 
     __asm__("mov edi, %[current_char_casted]\n\t"
             "mov esi, %[char_cast]\n\t" 
-            "mov ecx, %[c2_ind]\n\t"
-            : : [char_cast] "r" (char_cast), [current_char_casted] "r" (current_char_casted), [c2_ind] "r" (c2_ind));
+            "mov ecx, %[global_ind]\n\t"
+            : : [char_cast] "r" (char_cast), [current_char_casted] "r" (current_char_casted), [global_ind] "r" (global_ind));
     // identifier for patching routine
     __asm__(".byte 0x02");
     __asm__(C2_NOPS : : : "eax", "ebx", "ecx", "edx", "esi"); // to be patched by patcher to contain 64 bit code
     __asm__("mov %[valid_char], edi" : [valid_char] "=m" (valid_char) : : "edi");
     c2_ind++;
-    printf("success: %i\n", valid_char);
+    printf("checker 2 success: %i\n", valid_char);
     return valid_char;
 }
 
-// int c2_ind = 0;
-// int checker_3(char c)
-// {
-//     char xored[] = CHECKER_2;
-//     int valid_char = 0;
-//     int char_cast = (int)c;
-//     int current_char_casted = (int) xored[c2_ind];
-    
-//     if (c2_ind >= sizeof(xored))
-//     {
-//         return valid_char;
-//     }
+int c3_ind = 0;
+int checker_3(char c, int global_ind)
+{
+    char encrypted_flag_bytes[] = CHECKER_3;
+    int valid_char = 0;
 
-//     __asm__("mov edi, %[current_char_casted]\n\t"
-//             "mov esi, %[char_cast]\n\t" 
-//             "mov ecx, %[c2_ind]\n\t"
-//             : : [char_cast] "r" (char_cast), [current_char_casted] "r" (current_char_casted), [c2_ind] "r" (c2_ind));
-//     // identifier for patching routine
-//     __asm__(".byte 0x03");
-//     __asm__(C2_NOPS : : : "eax", "ebx", "ecx", "edx", "esi"); // to be patched by patcher to contain 64 bit code
-//     __asm__("mov %[valid_char], edi" : [valid_char] "=m" (valid_char));
-//     c2_ind++;
-//     printf("success: %i\n", valid_char);
-//     return valid_char;
-// }
+
+    if (c2_ind >= sizeof(encrypted_flag_bytes))
+    {
+        return valid_char;
+    }
+
+    // char *plaintext, size_t plaintext_len, char IV, unsigned char *key
+    void (*encrypt)(char*, size_t, char, unsigned char*);
+    encrypt = (void(*)(char*, size_t, char, unsigned char*)) 0x180000 + 0x138d; //ENCRYPT_OFFSET;
+    char output = c;
+    encrypt(&output, 1, (char) global_ind, (unsigned char *)&dummy_key);
+    printf("ended up with %hhx\n", output);
+    
+    if (output == encrypted_flag_bytes[c3_ind]) 
+    {
+        valid_char = 1;
+    }
+
+    c3_ind++;
+    printf("checker 3 success: %i\n", valid_char);
+    return valid_char;
+}
 
 void chal_2()
 {
@@ -278,16 +281,20 @@ void chal_2()
     puts("You emerge\n");
     fgets(input, 64, stdin);
     srand(seed);
-    checker_1('f');
     for (int i = 0; i < strlen(input); i++)
     {
-        srand(dummy);
-        switch (rand() % 3)
+        int picker = rand() % 3;
+        switch (picker)
         {
         case 0:
+            checker_1(input[i], i);
+            break;
         case 1:
+            checker_2(input[i], i);
+            break;
         case 2:
-            checker_2(input[i]);
+            checker_3(input[i], i);
+            break;
         }
 
         //puts(strerror(errno));
