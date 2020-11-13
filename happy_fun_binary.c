@@ -42,7 +42,6 @@ void decrypt(char *ciphertext, size_t plaintext_len, char IV, unsigned char *key
 
 void vault_gate()
 {
-    __asm__("NOP;\n\t");
     FILE *f;
     unsigned char c;
     unsigned char *fname = "binary_of_ballas.so";

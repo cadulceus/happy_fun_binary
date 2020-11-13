@@ -17,10 +17,11 @@ export CHECKER_1_BYTES="{0x43f,0x3b8,0x4ea,0x1be,0x1c2,0x1c2,0x1c3,0x1bf,0x3d4,0
 export CHECKER_2_BYTES="{0x28,0x22,0x1f,0x3a,0x1d,0x2b,0x15,0x16,0xe,0x5c,-0x1,0x1b,0x59,0x55,-0x1,0xd,0xb,-0x1,-0xd}"
 export CHECKER_3_BYTES="{0xc3,0x98,0xcd,0x36,0xef,0x19,0x55,0xed,0xc7,0x5a,0x9e,0x6f,0x19,0x4d,0x62,0x9f,0x2c,0x81,0x42,0xf6,0xd9}"
 
-gcc -c -DC1_NOPS=$C1_NOPS -DCHECKER_1="$CHECKER_1_BYTES" -DC2_NOPS=$C2_NOPS -DCHECKER_2="$CHECKER_2_BYTES" -DCHECKER_3="$CHECKER_3_BYTES" -masm=intel -Wall -fpic -ggdb -Wl,-E -m32 -O0 -DDEBUG binary_of_ballas.c
+gcc -c -DDEBUG=1 -DC1_NOPS=$C1_NOPS -DCHECKER_1="$CHECKER_1_BYTES" -DC2_NOPS=$C2_NOPS -DCHECKER_2="$CHECKER_2_BYTES" -DCHECKER_3="$CHECKER_3_BYTES" -masm=intel -Wall -fpic -ggdb -Wl,-E -m32 -O0  binary_of_ballas.c
 gcc -shared -m32 -o binary_of_ballas.so binary_of_ballas.o
 
 export BOB_SZ=$(wc -c < binary_of_ballas.so)
-export SEA_OF_YEET=$(python -c "print 'e'*$BOB_SZ")
+#strip -s --keep-symbol="foyer" binary_of_ballas.so
 gcc happy_fun_binary.c -masm=intel -m32 -ldl -DDEBUG -DBOB_SZ=$BOB_SZ -o happy_fun_binary
 python patcher.py
+#strip -s happy_fun_binary

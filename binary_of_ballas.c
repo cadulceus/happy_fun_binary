@@ -25,7 +25,7 @@ struct symbol_ratio ratios[] = {
     {.c = 0x5f, .ratio = 0.131579f}, //_
 };
 
-struct symbol_range *find_range_for_char(char c, struct symbol_range *range_array, size_t array_len)
+struct symbol_range *frfc(char c, struct symbol_range *range_array, size_t array_len) // find_range_for_char
 {
     for (int i = 0; i < array_len; i++)
     {
@@ -37,7 +37,7 @@ struct symbol_range *find_range_for_char(char c, struct symbol_range *range_arra
     return NULL;
 }
 
-long double shortest_valid_double(long double lower, long double upper)
+long double svd(long double lower, long double upper) // shortest_valid_double
 {
     char lower_str[20];
     char upper_str[20];
@@ -69,7 +69,7 @@ long double encode(long double lower, long double upper, char *string, struct sy
         pointer = current_mapping[i].upper;
     }
     char current_char = string[0];
-    struct symbol_range *char_range = find_range_for_char(current_char, current_mapping, mapping_len);
+    struct symbol_range *char_range = frfc(current_char, current_mapping, mapping_len);
     if (strlen(string) == 1)
     {
         return char_range->lower + ((char_range->upper - char_range->lower) / 2);
@@ -184,11 +184,11 @@ void chal_1()
     }
 }
 
-int actual_dummy = 0;
-int dummy_key = 0x54454559;
+int val_1 = 0;
+int val_2 = 0x54454559;
 int seed = 31337;
 
-void __attribute__((constructor)) test()
+void __attribute__((constructor)) zF1() // pls don't notice the garbage symbol
 {
     while (1)
     {
@@ -215,7 +215,9 @@ int checker_1(char c, int global_ind) // maps happy_fun_binary to 0x180000, cont
     __asm__(C1_NOPS : : : "eax", "ebx", "ecx", "edx", "esi"); // to be patched by patcher to contain 64 bit code
     __asm__("mov %[valid_char], edi" : [valid_char] "=m" (valid_char) : : "edi");
     c1_ind++;
+#ifdef DEBUG
     printf("checker 1 success: %i\n", valid_char);
+#endif
     return valid_char;
 }
 
@@ -241,7 +243,9 @@ int checker_2(char c, int global_ind) // input char + 1 xor 2nd byte of happy_fu
     __asm__(C2_NOPS : : : "eax", "ebx", "ecx", "edx", "esi"); // to be patched by patcher to contain 64 bit code
     __asm__("mov %[valid_char], edi" : [valid_char] "=m" (valid_char) : : "edi");
     c2_ind++;
+#ifdef DEBUG
     printf("checker 2 success: %i\n", valid_char);
+#endif
     return valid_char;
 }
 
@@ -261,8 +265,7 @@ int checker_3(char c, int global_ind)
     void (*encrypt)(char*, size_t, char, unsigned char*);
     encrypt = (void(*)(char*, size_t, char, unsigned char*)) 0x180000 + 0x138d; //ENCRYPT_OFFSET;
     char output = c;
-    encrypt(&output, 1, (char) global_ind, (unsigned char *)&dummy_key);
-    printf("ended up with %hhx\n", output);
+    encrypt(&output, 1, (char) global_ind, (unsigned char *)&val_2);
     
     if (output == encrypted_flag_bytes[c3_ind]) 
     {
@@ -270,7 +273,9 @@ int checker_3(char c, int global_ind)
     }
 
     c3_ind++;
+#ifdef DEBUG
     printf("checker 3 success: %i\n", valid_char);
+#endif
     return valid_char;
 }
 
@@ -281,24 +286,28 @@ void chal_2()
     puts("You emerge\n");
     fgets(input, 64, stdin);
     srand(seed);
-    for (int i = 0; i < strlen(input); i++)
+    int passed = 1;
+    for (int i = 0; i < strlen(input) - 1; i++)
     {
         int picker = rand() % 3;
         switch (picker)
         {
         case 0:
-            checker_1(input[i], i);
+            passed = passed & checker_1(input[i], i);
             break;
         case 1:
-            checker_2(input[i], i);
+            passed = passed & checker_2(input[i], i);
             break;
         case 2:
-            checker_3(input[i], i);
+            passed = passed & checker_3(input[i], i);
             break;
         }
-
-        //puts(strerror(errno));
-        //fgets(input, 64, stdin);
+    }
+    if (passed)
+    {
+        puts("\"Congratulations, that is the correct flag\"");
+    } else {
+        puts("\"Unfortunately that does not appear to be correct\"");
     }
 }
 
