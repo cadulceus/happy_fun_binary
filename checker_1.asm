@@ -32,7 +32,7 @@ use64
 
     mov     rax, 2                   ; open syscall number for 64 bit
     mov     rdi, rsp  
-    mov     rsi, 0x2                 ; RW
+    mov     rsi, 0x0                 ; O_RDONLY
     mov     rdx, 0x0
     syscall
 
@@ -43,7 +43,7 @@ use64
     mov     rdx, 0x5                 ; rwp
     mov     r10, 0x2                 ; MAP_PRIVATE
     mov     r9, 0x0
-    syscall 
+    syscall
 ;    mov     rax, 1                   ; basically print
 ;    mov     rdi, 1
 ;    mov     rsi, 0x180000             
@@ -55,7 +55,6 @@ use64
     pop rsi
     pop rdi
     cmp sil, [rdi + 0x180000]
-    mov rdi, rsi
     mov rdx, 0x1
     cmove rdi, rdx
     mov rdx, 0x0

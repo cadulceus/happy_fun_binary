@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <errno.h>
 
 struct symbol_range
 {
@@ -121,7 +123,7 @@ void chal_1()
 
     char flag_str[64] = "flag{beep_this_is_not_the_flag}";
 
-    printf("You enter the leftmost doorway and emerge in a square shaped room."
+    printf("And emerge in a square shaped room."
            " Across the walls you see a number of structures inscribed into the binary,"
            " and at the room's center lies a capsule atop a pedestal. To the left of the pedestal"
            " is a function that appears to feed directly into the pedestal. Below the function"
@@ -182,9 +184,9 @@ void chal_1()
     }
 }
 
-char *lexicon = "abcdefghijklmnopqrstuvwxyz{}";
+int dummy = 420;
+int seed = 31337;
 
-char *secret = "secret";
 void __attribute__((constructor)) test()
 {
     while (1)
@@ -193,19 +195,104 @@ void __attribute__((constructor)) test()
     }
 }
 
-void chal_3()
+int c1_ind = 0;
+int checker_1(char c) // maps happy_fun_binary to 0x180000, contains offsets to flag characters in the binary
 {
-#ifdef yeet
-    // flag{heavens_gate_should_be_renamed_to_planar_shift_imo}
-    char input[64];
-    puts("You em");
-    fgets(input, 64, stdin);
+    int offsets[] = CHECKER_1;
+    int valid_char = 0;
+    int char_cast = (int)c;
+    int current_offset = offsets[c1_ind];
+    if (c1_ind >= sizeof(offsets) / sizeof(int))
+    {
+        return valid_char;
+    }
 
+    __asm__("mov edi, %[current_offset]\n\t"
+            "mov esi, %[char_cast]\n\t" : : [char_cast] "r" (char_cast), [current_offset] "r" (current_offset));
+    // identifier for patching routine
+    __asm__(".byte 0x01");
+    __asm__(C1_NOPS : : : "eax", "ebx", "ecx", "edx", "esi"); // to be patched by patcher to contain 64 bit code
+    __asm__("mov %[valid_char], edi" : [valid_char] "=m" (valid_char));
+    c1_ind++;
+    printf("success: %i\n", valid_char);
+    return valid_char;
+}
+
+int c2_ind = 0;
+int checker_2(char c) // input char + 1 xor 2nd byte of happy_fun_binary
+{
+    char xored[] = CHECKER_2;
+    int valid_char = 0;
+    int char_cast = (int)c;
+    int current_char_casted = (int) xored[c2_ind];
+    
+    if (c2_ind >= sizeof(xored))
+    {
+        return valid_char;
+    }
+    puts("starting checker2");
+
+    __asm__("mov edi, %[current_char_casted]\n\t"
+            "mov esi, %[char_cast]\n\t" 
+            "mov ecx, %[c2_ind]\n\t"
+            : : [char_cast] "r" (char_cast), [current_char_casted] "r" (current_char_casted), [c2_ind] "r" (c2_ind));
+    // identifier for patching routine
+    __asm__(".byte 0x02");
+    __asm__(C2_NOPS : : : "eax", "ebx", "ecx", "edx", "esi"); // to be patched by patcher to contain 64 bit code
+    __asm__("mov %[valid_char], edi" : [valid_char] "=m" (valid_char) : : "edi");
+    c2_ind++;
+    printf("success: %i\n", valid_char);
+    return valid_char;
+}
+
+// int c2_ind = 0;
+// int checker_3(char c)
+// {
+//     char xored[] = CHECKER_2;
+//     int valid_char = 0;
+//     int char_cast = (int)c;
+//     int current_char_casted = (int) xored[c2_ind];
+    
+//     if (c2_ind >= sizeof(xored))
+//     {
+//         return valid_char;
+//     }
+
+//     __asm__("mov edi, %[current_char_casted]\n\t"
+//             "mov esi, %[char_cast]\n\t" 
+//             "mov ecx, %[c2_ind]\n\t"
+//             : : [char_cast] "r" (char_cast), [current_char_casted] "r" (current_char_casted), [c2_ind] "r" (c2_ind));
+//     // identifier for patching routine
+//     __asm__(".byte 0x03");
+//     __asm__(C2_NOPS : : : "eax", "ebx", "ecx", "edx", "esi"); // to be patched by patcher to contain 64 bit code
+//     __asm__("mov %[valid_char], edi" : [valid_char] "=m" (valid_char));
+//     c2_ind++;
+//     printf("success: %i\n", valid_char);
+//     return valid_char;
+// }
+
+void chal_2()
+{
+    // flag{h3av3ns_gate_should_b3_r3nam3d_to_planar_sh1ft_1m0}
+    char input[64];
+    puts("You emerge\n");
+    fgets(input, 64, stdin);
+    srand(seed);
+    checker_1('f');
     for (int i = 0; i < strlen(input); i++)
     {
-        selector();
+        srand(dummy);
+        switch (rand() % 3)
+        {
+        case 0:
+        case 1:
+        case 2:
+            checker_2(input[i]);
+        }
+
+        //puts(strerror(errno));
+        //fgets(input, 64, stdin);
     }
-#endif
 }
 
 void foyer(void *happy_fun_binary_ptr)
@@ -215,7 +302,7 @@ void foyer(void *happy_fun_binary_ptr)
     puts("You emerge into a grand and extravegant foyer. While sparsely furnished, intricately crafted code decorates every square"
          " inch of the walls and ceiling. In the center of the room lies a grand structure, carved into which"
          " are three slots. The three slots feed into a function that seems cryptographic in nature."
-         " On the far side of the room lies 3 semi-circular doorways leading into darkness.\n");
+         " On the far side of the room lies 2 semi-circular doorways leading into darkness.\n");
 
     while (1)
     {
@@ -232,20 +319,16 @@ void foyer(void *happy_fun_binary_ptr)
             puts("On closer inspection, you realize that its not yet implemented. oops!\n");
         }
 
-        if (!strcmp(input, "enter the first gate\n"))
+        if (!strcmp(input, "enter the first doorway\n"))
         {
+            puts("You step through the doorway...\n");
             chal_1();
         }
 
-        if (!strcmp(input, "enter the second gate\n"))
+        if (!strcmp(input, "enter the second doorway\n"))
         {
-            puts("You quickly realize that it leads nowhere because the challenge isn't implemented yet :(\n");
-        }
-
-        if (!strcmp(input, "enter the third gate\n"))
-        {
-            chal_3();
-            puts("You quickly realize that it leads nowhere because the challenge isn't implemented yet :(\n");
+            puts("You step through the doorway...\n");
+            chal_2();
         }
     }
 }
