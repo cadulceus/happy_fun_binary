@@ -46,13 +46,14 @@ def run_const_routines(const_routines):
         patch_const(routine)
 
 hfb = ELF("happy_fun_binary")
+bob = ELF("binary_of_ballas.so")
 vault_loc = hfb.symbols['vault'] & 0x0FFF
 IV = 0x69
 key = vault_loc**3
 
 print("Key: ", key, "IV: ", chr(IV))
 print("Sea of entropy: ", hfb.symbols["sea_of_entropy"])
-print("vault: ", vault_loc)
+print("vault: ", hex(vault_loc))
 raw_input("Press enter to continue patching...")
 
 const_routines = []
@@ -74,6 +75,13 @@ with open("checker_2.bin") as f:
                 f.read()
                 ]
                 )
+print "chest offset: ", bob.symbols["chest"] - 0x1000
+with open("chest.zip") as f:
+    const_routines.append(["binary_of_ballas.so", 
+                bob.symbols["chest"] - 0x1000, # the segment .data is in gets loaded at +0x1000 so we need to correct
+                f.read()
+                ]
+                )
 
 run_const_routines(const_routines) # round 1 of patching
 const_routines = []
@@ -82,7 +90,6 @@ with open("binary_of_ballas.so") as f:
     const_routines.append(["happy_fun_binary", 
             hfb.symbols["sea_of_entropy"] - 0x1000, # the segment .data is in gets loaded at +0x1000 so we need to correct
             encrypt([ord(char) for char in f.read()], IV, [ord(char) for char in p32(key)])])
-        #["bomblab", e.symbols["fptrs"]-0x08048000, p64(find_pattern("bomblab", "pch1") + find_pattern("phase1_64", "con3")-0x54+0x08048000-0x3) + p64(0x23)],
 
 run_const_routines(const_routines)
 for routine in routines:

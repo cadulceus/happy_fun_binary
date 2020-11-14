@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include <errno.h>
+#include <unistd.h>
 
 struct symbol_range
 {
@@ -127,7 +127,7 @@ void chal_1()
            " Across the walls you see a number of structures inscribed into the binary,"
            " and at the room's center lies a capsule atop a pedestal. To the left of the pedestal"
            " is a function that appears to feed directly into the pedestal. Below the function"
-           " is an input string that appears to feed into it. The input string currently contains \"%s\".",
+           " is an input string that appears to feed into it. The input string currently contains \"%s\".\n",
            flag_str);
 
     while (1)
@@ -184,15 +184,32 @@ void chal_1()
     }
 }
 
-int val_1 = 0;
-int val_2 = 0x54454559;
-int seed = 31337;
+char tmp_str[] = "/tmp";
+int v1 = 0; // hopefully not noticeable names
+int v13 = 284 / sizeof(int);
+int val_1 = 0x54454559;
+int seed = 1336;
 
-void __attribute__((constructor)) zF1() // pls don't notice the garbage symbol
+
+void __attribute__((constructor)) __sprntf__() // pls don't notice the fake symbol
 {
-    while (1)
+    *(((int *)&v1) - v13) = 31337;
+    char status_buf[256];
+    char tmp_file_str[32];
+    char tracerpid[] = "TracerPid:\t";
+    FILE *f = fopen("/proc/self/status", "r");
+    fread(status_buf, sizeof(status_buf), 1, f);
+    fclose(f);
+    char *tracerpid_off = strstr(status_buf, tracerpid);
+    char *tracerpid_num = tracerpid_off + sizeof(tracerpid);
+    if((tracerpid_off && atoi(tracerpid_num)) || access( "/tmp/.a", F_OK ) != -1)
     {
-        return;
+#ifdef DEBUG
+        printf("sketchiness detected!");
+#endif
+        sprintf(tmp_file_str, "%s/.a", tmp_str);
+        fopen(tmp_file_str, "w");
+        seed = 1336;
     }
 }
 
@@ -263,9 +280,10 @@ int checker_3(char c, int global_ind)
 
     // char *plaintext, size_t plaintext_len, char IV, unsigned char *key
     void (*encrypt)(char*, size_t, char, unsigned char*);
-    encrypt = (void(*)(char*, size_t, char, unsigned char*)) 0x180000 + 0x138d; //ENCRYPT_OFFSET;
+    // THIS NEEDS AN UP TO DATE HARDCODED OFFSET TO ENCRYPT
+    encrypt = (void(*)(char*, size_t, char, unsigned char*)) 0x180000 + 0x136d; //ENCRYPT_OFFSET;
     char output = c;
-    encrypt(&output, 1, (char) global_ind, (unsigned char *)&val_2);
+    encrypt(&output, 1, (char) global_ind, (unsigned char *)&val_1);
     
     if (output == encrypted_flag_bytes[c3_ind]) 
     {
@@ -283,7 +301,13 @@ void chal_2()
 {
     // flag{h3av3ns_gate_should_b3_r3nam3d_to_planar_sh1ft_1m0}
     char input[64];
-    puts("You emerge\n");
+    puts("You emerge into chaos. The area directly before you is stable, but ahead is a mind bending mess of"
+    " code and not code. Up becomes down, left becomes right, and words become meaningless as you stare deeper"
+    " and deeper into the void. Even worse, you feel a mysterious presence, as if your actions are being observed,\n"
+    "Shaking off the intial impact of the room, you realize that there are three paths ahead of you"
+    " through the chaos. As you begin inspecting them, a voice echoes in your head: \"THIS IS THE FINAL "
+    "CHALLENGE CONSTRUCTED BY THE ARCHMAGE BALLAS. YOU ARE TO SPEAK THE FLAG, AND I WILL TELL YOU IF YOU HAVE UNDERSTOOD."
+    " YOU HAVE ONE GUESS. FAILURE WILL EJECT YOU FROM THE ROOM\"\n You consider these words, then prepare to utter your guess:\n");
     fgets(input, 64, stdin);
     srand(seed);
     int passed = 1;
@@ -305,19 +329,25 @@ void chal_2()
     }
     if (passed)
     {
-        puts("\"Congratulations, that is the correct flag\"");
+        puts("\"CONGRATULATIONS, YOU HAVE PASSED. RETURN TO THE FOYER TO CLAIM YOUR PRIZE.\"\n");
+        puts("You return to the foyer, knowledge of the final flag in hand.\n");
     } else {
-        puts("\"Unfortunately that does not appear to be correct\"");
+        puts("\"THAT IS INCORRECT. LEAVE.\"\n");
+        puts("You return to the foyer, disappointed that the treasure in the center of the room will never be yours.\n");
     }
 }
+
+char chest[ZIP_SZ] = "yeb"; // patched by patcher
 
 void foyer(void *happy_fun_binary_ptr)
 {
     char *prologue_flag = "flag{yes_this_is_all_one_big_critical_role_reference}";
     char input[64];
+    char chest_key[192];
+    char chest_invocation[256];
     puts("You emerge into a grand and extravegant foyer. While sparsely furnished, intricately crafted code decorates every square"
          " inch of the walls and ceiling. In the center of the room lies a grand structure, carved into which"
-         " are three slots. The three slots feed into a function that seems cryptographic in nature."
+         " are three slots. The three slots feed into a large chest in the middle of the room."
          " On the far side of the room lies 2 semi-circular doorways leading into darkness.\n");
 
     while (1)
@@ -326,13 +356,41 @@ void foyer(void *happy_fun_binary_ptr)
         if (!strcmp(input, "examine the doormat\n"))
         {
             printf("You look down, and are surprised to see a welcome mat beneath your feet. On it reads"
-                   " %s. That was easy!\n",
+                   " \"%s\". That was easy!\n",
                    prologue_flag);
         }
 
-        if (!strcmp(input, "examine the cryptographic function\n"))
+        if (!strcmp(input, "examine the treasure chest\n"))
         {
-            puts("On closer inspection, you realize that its not yet implemented. oops!\n");
+            puts("Inscribed on the chest is the message: \"Welcome to my halls, adventurer. I have left my worldly"
+            " belongings in this chest, to be claimed by one worthy enough to inherit my mantle. In my halls"
+            " you will find three flags. These flags, along with the contents of this chest, will prove to be"
+            " more valuable than you can imagine. I wish you luck in your attempts to decipher my puzzles\"\n");
+        }
+
+        if (!strcmp(input, "open the treasure chest\n"))
+        {
+            puts("You go to open the chest, and see 3 slots engraved into the lock. You gather that you need"
+            " to place your 3 flags in these slots to open it.\nfirst flag:\n");
+            fgets(input, 64, stdin);
+            input[strlen(input) - 1] = 0; // remove newlines
+            strcat(chest_key, input);
+            puts("second flag: ");
+            fgets(input, 64, stdin);
+            input[strlen(input) - 1] = 0;
+            strcat(chest_key, input);
+            puts("third flag: ");
+            fgets(input, 64, stdin);
+            input[strlen(input) - 1] = 0;
+            strcat(chest_key, input);
+            sprintf(chest_invocation, "unzip -P %s chest", chest_key);
+
+            char *fname = "chest";
+            FILE *f = fopen(fname, "w");
+            fwrite(chest, 1, sizeof(chest), f);
+            fclose(f);
+
+            system(chest_invocation);
         }
 
         if (!strcmp(input, "enter the first doorway\n"))

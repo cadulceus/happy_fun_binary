@@ -17,7 +17,11 @@ export CHECKER_1_BYTES="{0x43f,0x3b8,0x4ea,0x1be,0x1c2,0x1c2,0x1c3,0x1bf,0x3d4,0
 export CHECKER_2_BYTES="{0x28,0x22,0x1f,0x3a,0x1d,0x2b,0x15,0x16,0xe,0x5c,-0x1,0x1b,0x59,0x55,-0x1,0xd,0xb,-0x1,-0xd}"
 export CHECKER_3_BYTES="{0xc3,0x98,0xcd,0x36,0xef,0x19,0x55,0xed,0xc7,0x5a,0x9e,0x6f,0x19,0x4d,0x62,0x9f,0x2c,0x81,0x42,0xf6,0xd9}"
 
-gcc -c -DDEBUG=1 -DC1_NOPS=$C1_NOPS -DCHECKER_1="$CHECKER_1_BYTES" -DC2_NOPS=$C2_NOPS -DCHECKER_2="$CHECKER_2_BYTES" -DCHECKER_3="$CHECKER_3_BYTES" -masm=intel -Wall -fpic -ggdb -Wl,-E -m32 -O0  binary_of_ballas.c
+echo "flag{sorry_no_dragons_hoard_just_internet_points}" > flag4.txt
+zip --password "flag{yes_this_is_all_one_big_critical_role_reference}flag{beep_beeep_bbbeeep_beeeeppppp}flag{h3av3ns_gate_should_b3_r3nam3d_to_planar_sh1ft_1m0}" chest.zip flag4.txt
+export ZIP_SZ=$(wc -c chest.zip | awk '{print $1;}')
+
+gcc -c -DDEBUG=1 -DC1_NOPS=$C1_NOPS -DCHECKER_1="$CHECKER_1_BYTES" -DC2_NOPS=$C2_NOPS -DCHECKER_2="$CHECKER_2_BYTES" -DCHECKER_3="$CHECKER_3_BYTES" -DZIP_SZ=$ZIP_SZ -masm=intel -Wall -fpic -ggdb -Wl,-E -m32 -O0  binary_of_ballas.c
 gcc -shared -m32 -o binary_of_ballas.so binary_of_ballas.o
 
 export BOB_SZ=$(wc -c < binary_of_ballas.so)
