@@ -281,7 +281,7 @@ int checker_3(char c, int global_ind)
     // char *plaintext, size_t plaintext_len, char IV, unsigned char *key
     void (*encrypt)(char*, size_t, char, unsigned char*);
     // THIS NEEDS AN UP TO DATE HARDCODED OFFSET TO ENCRYPT
-    encrypt = (void(*)(char*, size_t, char, unsigned char*)) 0x180000 + 0x136d; //ENCRYPT_OFFSET;
+    encrypt = (void(*)(char*, size_t, char, unsigned char*)) 0x180000 + ENCRYPT_OFFSET;
     char output = c;
     encrypt(&output, 1, (char) global_ind, (unsigned char *)&val_1);
     

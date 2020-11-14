@@ -21,11 +21,13 @@ echo "flag{sorry_no_dragons_hoard_just_internet_points}" > flag4.txt
 zip --password "flag{yes_this_is_all_one_big_critical_role_reference}flag{beep_beeep_bbbeeep_beeeeppppp}flag{h3av3ns_gate_should_b3_r3nam3d_to_planar_sh1ft_1m0}" chest.zip flag4.txt
 export ZIP_SZ=$(wc -c chest.zip | awk '{print $1;}')
 
-gcc -c -DDEBUG=1 -DC1_NOPS=$C1_NOPS -DCHECKER_1="$CHECKER_1_BYTES" -DC2_NOPS=$C2_NOPS -DCHECKER_2="$CHECKER_2_BYTES" -DCHECKER_3="$CHECKER_3_BYTES" -DZIP_SZ=$ZIP_SZ -masm=intel -Wall -fpic -ggdb -Wl,-E -m32 -O0  binary_of_ballas.c
+export ENCRYPT_OFFSET="0x138d"
+gcc -c -DDEBUG=1 -DENCRYPT_OFFSET=$ENCRYPT_OFFSET -DC1_NOPS=$C1_NOPS -DCHECKER_1="$CHECKER_1_BYTES" -DC2_NOPS=$C2_NOPS -DCHECKER_2="$CHECKER_2_BYTES" -DCHECKER_3="$CHECKER_3_BYTES" -DZIP_SZ=$ZIP_SZ -masm=intel -Wall -fpic -ggdb -Wl,-E -m32 -O0  binary_of_ballas.c
 gcc -shared -m32 -o binary_of_ballas.so binary_of_ballas.o
 
 export BOB_SZ=$(wc -c < binary_of_ballas.so)
-#strip -s --keep-symbol="foyer" binary_of_ballas.so
 gcc happy_fun_binary.c -masm=intel -m32 -ldl -DDEBUG -DBOB_SZ=$BOB_SZ -o happy_fun_binary
+echo "rerun this build file with ENCRYPT_OFFSET=0x$(readelf -s happy_fun_binary | grep encrypt | awk '{print $2;}')!"
+#strip -s --keep-symbol="foyer" binary_of_ballas.so
 python patcher.py
 #strip -s happy_fun_binary
